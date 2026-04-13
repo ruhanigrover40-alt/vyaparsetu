@@ -315,39 +315,98 @@ function Home() {
 
       {/* VIBRANT PRICING SECTION WITH YEARLY TOGGLE */}
 {/* VIBRANT PRICING SECTION */}
-<section id="pricing" style={{ padding: '140px 5vw', background: 'linear-gradient(135deg, #FFCFF5 0%, #D6E4FF 100%)', position: 'relative' }}>
+{/* VIBRANT PRICING SECTION - MATCHED TO MOCKUP */}
+<section id="pricing" style={{ padding: '140px 5vw', background: 'linear-gradient(135deg, #FFCFF5 0%, #D6E4FF 100%)', position: 'relative', overflow: 'hidden' }}>
+  
+  {/* Abstract background glow shapes */}
+  <div style={{ position: 'absolute', top: '-100px', right: '-100px', width: '300px', height: '300px', borderRadius: '50%', background: 'rgba(233,30,99, 0.1)', filter: 'blur(50px)' }}></div>
+  <div style={{ position: 'absolute', bottom: '-100px', left: '-100px', width: '400px', height: '400px', borderRadius: '50%', background: 'rgba(33,85,255, 0.1)', filter: 'blur(60px)' }}></div>
+
   <div style={{ maxWidth: '1200px', margin: '0 auto', textAlign: 'center', position: 'relative', zIndex: 5 }}>
+    <div style={{ background: '#fff', display: 'inline-block', padding: '10px 25px', borderRadius: '30px', fontWeight: 700, color: '#111', marginBottom: '25px', boxShadow: '0 5px 15px rgba(0,0,0,0.05)' }}>
+      🏷️ Fair Pricing, No Hidden Fees
+    </div>
     <h3 style={{ fontSize: '4rem', fontWeight: 800, marginBottom: '20px', letterSpacing: '-1.5px', color: '#111' }}>Simple, honest pricing</h3>
-    <p style={{ color: '#444', fontSize: '1.4rem', marginBottom: '80px', fontWeight: 600 }}>Start for free, upgrade when you need more power.</p>
+    <p style={{ color: '#444', fontSize: '1.4rem', marginBottom: '80px', fontWeight: 600, maxWidth: '600px', margin: '0 auto 80px' }}>Start for free, upgrade when you need more power.</p>
     
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '40px' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '40px', alignItems: 'start' }}>
       
       {/* Card 1: Neev */}
-      <div className="pricing-card" style={{ background: '#fff', padding: '40px', borderRadius: '30px' }}>
-        <h4 style={{ fontSize: '2rem', fontWeight: 800 }}>Neev (Starter)</h4>
-        <div style={{ fontSize: '3rem', fontWeight: 800 }}>₹0</div>
-        <button style={{ width: '100%', padding: '15px', marginTop: '20px', borderRadius: '12px' }}>Current Plan</button>
+      <div className="pricing-card" style={{ background: '#fff', padding: '50px 40px', borderRadius: '40px', textAlign: 'left', border: '1px solid #eee' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <h4 style={{ margin: 0, fontSize: '2rem', fontWeight: 800, color: '#111' }}>Neev</h4>
+          <span style={{ fontSize: '2.5rem' }}>🌱</span>
+        </div>
+        <p style={{ color: '#666', fontWeight: 500, fontSize: '1.1rem', marginBottom: '30px' }}>Perfect foundation for a new digital shop.</p>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: '5px', marginBottom: '40px' }}>
+          <span style={{ fontSize: '4rem', fontWeight: 800, color: '#111' }}>₹0</span>
+          <span style={{ fontSize: '1.2rem', color: '#666', fontWeight: 600 }}>/forever</span>
+        </div>
+        <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 40px 0', display: 'flex', flexDirection: 'column', gap: '15px', fontSize: '1.1rem', fontWeight: 600, color: '#444' }}>
+          <li>✅ 10 Bills / Month</li>
+          <li>✅ 10 Inventory Items</li>
+          <li>✅ Digital Khata (Udhaar)</li>
+          <li>✅ WhatsApp Bill Sharing</li>
+          <li>✅ Standard Printing</li>
+          <li style={{ color: '#888' }}>⚠️ Basic Reports</li>
+        </ul>
+        <button style={{ width: '100%', padding: '18px', background: '#f8f9fa', color: '#888', borderRadius: '15px', border: '2px solid #eee', fontWeight: 800, fontSize: '1.1rem', cursor: 'not-allowed' }}>Current Plan</button>
       </div>
 
       {/* Card 2: Pragati */}
-      <div className="pricing-card" style={{ background: '#fff', padding: '40px', borderRadius: '30px', transform: 'scale(1.05)', border: '2px solid #E91E63' }}>
-        <h4 style={{ fontSize: '2rem', fontWeight: 800 }}>Pragati (Growth)</h4>
-        <div style={{ fontSize: '3rem', fontWeight: 800 }}>₹299</div>
-        <button onClick={() => handlePayment("Pragati Monthly", 29900)} style={{ width: '100%', padding: '15px', marginTop: '10px', background: '#E91E63', color: '#fff', borderRadius: '12px', border: 'none', cursor: 'pointer' }}>Buy Monthly</button>
-        <button onClick={() => handlePayment("Pragati Yearly", 299000)} style={{ width: '100%', padding: '15px', marginTop: '10px', background: '#fff', border: '2px solid #E91E63', borderRadius: '12px', cursor: 'pointer' }}>Buy Yearly</button>
+      <div className="pricing-card glowing-card" style={{ background: '#fff', padding: '50px 40px', borderRadius: '40px', textAlign: 'left', position: 'relative', transform: 'scale(1.03)', boxShadow: '0 20px 50px rgba(233,30,99,0.1)' }}>
+        <div style={{ position: 'absolute', top: '20px', right: '20px', background: 'linear-gradient(90deg, #ff007f, #7928ca)', color: '#fff', padding: '8px 15px', borderRadius: '20px', fontWeight: 700, fontSize: '0.8rem' }}>POPULAR</div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <h4 style={{ margin: 0, fontSize: '2rem', fontWeight: 800, color: '#111' }}>Pragati</h4>
+          <span style={{ fontSize: '2.5rem' }}>🚀</span>
+        </div>
+        <p style={{ color: '#666', fontWeight: 500, fontSize: '1.1rem', marginBottom: '30px' }}>For busy shops ready to scale up.</p>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: '5px', marginBottom: '40px' }}>
+          <span style={{ fontSize: '4rem', fontWeight: 800, color: '#111' }}>₹299</span>
+          <span style={{ fontSize: '1.2rem', color: '#666', fontWeight: 600 }}>/month</span>
+        </div>
+        <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 40px 0', display: 'flex', flexDirection: 'column', gap: '15px', fontSize: '1.1rem', fontWeight: 600, color: '#444' }}>
+          <li>✅ 500 Bills / Month</li>
+          <li>✅ Unlimited Inventory</li>
+          <li>✅ Everything in Neev</li>
+          <li>✅ Barcode Scanning</li>
+          <li>✅ Thermal Printer Support</li>
+          <li>✅ Comprehensive Reports</li>
+        </ul>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <button onClick={() => handlePayment("Pragati Monthly", 29900)} style={{ width: '100%', padding: '18px', background: '#E91E63', color: '#fff', borderRadius: '15px', border: 'none', fontWeight: 800, fontSize: '1.1rem', cursor: 'pointer', transition: '0.3s' }}>Buy Monthly</button>
+          <button onClick={() => handlePayment("Pragati Yearly", 299000)} style={{ width: '100%', padding: '18px', background: '#fff', color: '#E91E63', borderRadius: '15px', border: '2px solid #E91E63', fontWeight: 800, fontSize: '1.1rem', cursor: 'pointer', transition: '0.3s' }}>Buy Yearly (Save 20%)</button>
+        </div>
       </div>
 
       {/* Card 3: Udaan */}
-      <div className="pricing-card" style={{ background: '#fff', padding: '40px', borderRadius: '30px' }}>
-        <h4 style={{ fontSize: '2rem', fontWeight: 800 }}>Udaan (Premium)</h4>
-        <div style={{ fontSize: '3rem', fontWeight: 800 }}>₹499</div>
-        <button onClick={() => handlePayment("Udaan Monthly", 49900)} style={{ width: '100%', padding: '15px', marginTop: '10px', background: '#2155FF', color: '#fff', borderRadius: '12px', border: 'none', cursor: 'pointer' }}>Buy Monthly</button>
-        <button onClick={() => handlePayment("Udaan Yearly", 499000)} style={{ width: '100%', padding: '15px', marginTop: '10px', background: '#fff', border: '2px solid #2155FF', borderRadius: '12px', cursor: 'pointer' }}>Buy Yearly</button>
+      <div className="pricing-card" style={{ background: '#fff', padding: '50px 40px', borderRadius: '40px', textAlign: 'left', border: '1px solid #eee' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <h4 style={{ margin: 0, fontSize: '2rem', fontWeight: 800, color: '#111' }}>Udaan</h4>
+          <span style={{ fontSize: '2.5rem' }}>🦅</span>
+        </div>
+        <p style={{ color: '#666', fontWeight: 500, fontSize: '1.1rem', marginBottom: '30px' }}>Ultimate tool for large enterprises.</p>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: '5px', marginBottom: '40px' }}>
+          <span style={{ fontSize: '4rem', fontWeight: 800, color: '#111' }}>₹499</span>
+          <span style={{ fontSize: '1.2rem', color: '#666', fontWeight: 600 }}>/month</span>
+        </div>
+        <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 40px 0', display: 'flex', flexDirection: 'column', gap: '15px', fontSize: '1.1rem', fontWeight: 600, color: '#444' }}>
+          <li>✅ Unlimited Bills & Items</li>
+          <li>✅ Everything in Pragati</li>
+          <li>✅ GST Filing Ready</li>
+          <li>✅ Multi-Staff Accounts</li>
+          <li>✅ Staff Performance Tracking</li>
+          <li>✅ Priority Support</li>
+        </ul>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <button onClick={() => handlePayment("Udaan Monthly", 49900)} style={{ width: '100%', padding: '18px', background: '#2155FF', color: '#fff', borderRadius: '15px', border: 'none', fontWeight: 800, fontSize: '1.1rem', cursor: 'pointer', transition: '0.3s' }}>Buy Monthly</button>
+          <button onClick={() => handlePayment("Udaan Yearly", 499000)} style={{ width: '100%', padding: '18px', background: '#fff', color: '#2155FF', borderRadius: '15px', border: '2px solid #2155FF', fontWeight: 800, fontSize: '1.1rem', cursor: 'pointer', transition: '0.3s' }}>Buy Yearly (Save 20%)</button>
+        </div>
       </div>
 
-    </div> {/* This closes the grid div */}
-  </div> {/* This closes the container div */}
-</section> {/* This closes the section */}
+    </div>
+  </div>
+</section>
 
       {/* MASSIVE 3D SUPPORT SECTION */}
       <section id="support" style={{ padding: '140px 5vw', textAlign: 'center', background: '#fff', position: 'relative', overflow: 'hidden' }}>
