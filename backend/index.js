@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const Razorpay = require('razorpay');
 
 // Import your Database Models
 const Product = require('./models/Product');
@@ -165,6 +166,33 @@ app.delete('/api/products/:id', async (req, res) => {
   } catch (error) {
     console.log("Error deleting product:", error);
     res.status(500).json({ message: "Failed to delete product", error });
+  }
+});
+// --- RAZORPAY PAYMENT ROUTE ---
+app.post('/api/create-order', async (req, res) => {
+  try {
+    // 1. Initialize Razorpay with your hidden keys
+    const razorpay = new Razorpay({
+      key_id: process.env.RAZORPAY_KEY_ID,
+      key_secret: process.env.RAZORPAY_KEY_SECRET,
+    });
+
+    // 2. Set the bill details (e.g., ₹499 for a Pro upgrade)
+    const options = {
+      amount: 49900, // Amount in paise (49900 paise = ₹499)
+      currency: "INR",
+      receipt: "receipt_order_1"
+    };
+
+    // 3. Ask Razorpay to generate a unique Order ID
+    const order = await razorpay.orders.create(options);
+    
+    // 4. Send that Order ID back to the React frontend
+    res.json(order);
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Error creating order");
   }
 });
 
