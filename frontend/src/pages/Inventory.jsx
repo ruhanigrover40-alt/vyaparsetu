@@ -50,7 +50,6 @@ function Inventory({ shopDetails, setShopDetails }) {
 const handleAddProduct = async (e) => {
     e.preventDefault();
     
-    // Check if at least one name is provided
     if (!nameHindi.trim() && !nameEnglish.trim()) {
       alert("⚠️ You must provide either a Hindi Name or an English Name to save this item!");
       return;
@@ -61,14 +60,12 @@ const handleAddProduct = async (e) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          // These now perfectly match your React state variables!
           productId: Number(productId), 
           nameHindi: nameHindi.trim(),
           nameEnglish: nameEnglish.trim(),
           rate: 0,
           stock: 0,
           baseUnit: "Nag",
-          // Safely grabs the ID whether it is saved as shopId or just id
           shopId: shopDetails?.shopId || shopDetails?.id 
         })
       });
@@ -76,11 +73,9 @@ const handleAddProduct = async (e) => {
       const result = await response.json();
 
       if (response.ok) {
-        // Success! Add to the list and clear the boxes
         setProducts([result.product, ...products]); 
         clearInputs();
       } else if (response.status === 403) {
-        // BINGO! The backend stopped us due to the 10-item limit. Show the popup!
         setUpgradeMessage(result.message);
         setShowUpgradePopup(true);
       } else {
@@ -175,6 +170,58 @@ const handleAddProduct = async (e) => {
     (p.productId && p.productId.toString().includes(searchQuery.toLowerCase()))
   );
 
+  // --- UPDATED PAYMENT FUNCTION (Dynamic Pricing + UPI) ---
+  const handlePayment = async (planName, price) => {
+    try {
+      const response = await fetch('https://vyaparsetu-backend.onrender.com/api/create-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: price }) 
+      });
+      const order = await response.json();
+
+      const options = {
+        key: "rzp_test_ScwLVZpL8SQvfU",
+        amount: order.amount,
+        currency: "INR",
+        name: "VyaparSetu",
+        description: `Upgrade to ${planName}`,
+        order_id: order.id, 
+        
+        config: {
+          display: {
+            blocks: {
+              banks: {
+                name: 'Choose Payment Method',
+                instruments: [
+                  { method: 'upi' },
+                  { method: 'card' },
+                  { method: 'netbanking' }
+                ]
+              }
+            },
+            sequence: ['block.banks'],
+            preferences: { show_default_blocks: true }
+          }
+        },
+
+        handler: function (response) {
+          alert(`Success! You have subscribed to the ${planName} plan.`);
+          setShowUpgradePopup(false);
+        },
+        theme: { color: "#ff2155" }
+      };
+
+      setShowUpgradePopup(false);
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+
+    } catch (error) {
+      console.error("Payment Error:", error);
+      alert("Unable to open payment window.");
+    }
+  };
+
   return (
     <div style={{ minHeight: '100vh', color: '#1e293b', fontFamily: '"Outfit", sans-serif', paddingBottom: '80px', position: 'relative', overflowX: 'hidden' }}>
       
@@ -231,53 +278,49 @@ const handleAddProduct = async (e) => {
         .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 12px 25px rgba(15,23,42,0.3); }
       `}</style>
 
-      {/* AMBIENT LIQUID BACKGROUND */}
       <div className="animated-bg">
         <div className="blob-1"></div>
         <div className="blob-2"></div>
       </div>
-      {/* ⭐ THE PREMIUM UPGRADE POPUP */}
+
+      {/* ⭐ UPDATED DYNAMIC PREMIUM UPGRADE POPUP */}
       {showUpgradePopup && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(8px)', zIndex: 9999, display: 'flex', justifyContent: 'center', alignItems: 'center', animation: 'modalFadeIn 0.3s forwards' }}>
-          <div className="glass-panel" style={{ background: '#fff', width: '90%', maxWidth: '450px', textAlign: 'center', padding: '40px', borderRadius: '30px', boxShadow: '0 30px 60px rgba(0,0,0,0.15)', animation: 'modalSlideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards', position: 'relative', overflow: 'hidden' }}>
-            
-            {/* Premium Gold Shine Effect */}
-            <div style={{ position: 'absolute', top: '-50%', left: '-50%', width: '200%', height: '200%', background: 'radial-gradient(circle, rgba(250,204,21,0.1) 0%, transparent 60%)', animation: 'spin 15s linear infinite', zIndex: 0, pointerEvents: 'none' }}></div>
-            <style>{`@keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
-
+          <div className="glass-panel" style={{ background: '#fff', width: '90%', maxWidth: '700px', textAlign: 'center', padding: '40px', borderRadius: '30px', boxShadow: '0 30px 60px rgba(0,0,0,0.15)', animation: 'modalSlideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards', position: 'relative', overflowY: 'auto', maxHeight: '90vh' }}>
             <div style={{ position: 'relative', zIndex: 1 }}>
-              <div style={{ fontSize: '4rem', marginBottom: '10px', filter: 'drop-shadow(0 10px 15px rgba(250,204,21,0.4))' }}>👑</div>
-              <h2 style={{ margin: '0 0 10px 0', fontSize: '2rem', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.5px' }}>Upgrade to Premium</h2>
-              
-              <p style={{ fontSize: '1.05rem', color: '#64748b', fontWeight: 600, lineHeight: '1.5', marginBottom: '30px' }}>
-                {upgradeMessage || "You've reached the limits of the free plan. Upgrade now for unlimited access!"}
+              <div style={{ fontSize: '3rem', marginBottom: '10px' }}>👑</div>
+              <h2 style={{ margin: '0 0 10px 0', fontSize: '1.8rem', fontWeight: 900, color: '#0f172a' }}>Upgrade Your Plan</h2>
+              <p style={{ fontSize: '1rem', color: '#64748b', fontWeight: 600, marginBottom: '30px' }}>
+                {upgradeMessage || "You've reached the 10-item limit. Choose a plan to unlock unlimited access!"}
               </p>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                <button 
-                  onClick={() => alert("Payment Gateway (Razorpay/Stripe) will open here!")} 
-                  style={{ background: 'linear-gradient(135deg, #2155FF 0%, #00C6FF 100%)', color: '#fff', padding: '18px', borderRadius: '16px', border: 'none', fontSize: '1.15rem', fontWeight: 800, cursor: 'pointer', boxShadow: '0 10px 25px rgba(33,85,255,0.3)', transition: 'transform 0.2s', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px' }}
-                  onMouseOver={e => e.currentTarget.style.transform = 'translateY(-3px)'}
-                  onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
-                >
-                  Unlock Unlimited Access ✨
-                </button>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
                 
-                <button 
-                  onClick={() => setShowUpgradePopup(false)} 
-                  style={{ background: 'transparent', color: '#94a3b8', padding: '15px', borderRadius: '14px', border: 'none', fontSize: '1rem', fontWeight: 700, cursor: 'pointer', transition: '0.2s' }}
-                  onMouseOver={e => e.target.style.color = '#0f172a'}
-                  onMouseOut={e => e.target.style.color = '#94a3b8'}
-                >
-                  Maybe Later
-                </button>
+                {/* PRAGATI PLAN */}
+                <div style={{ border: '2px solid #E91E63', borderRadius: '20px', padding: '20px', background: 'rgba(233, 30, 99, 0.02)' }}>
+                  <h3 style={{ margin: 0, color: '#E91E63' }}>Pragati (Growth)</h3>
+                  <div style={{ fontSize: '1.5rem', fontWeight: 800, margin: '15px 0' }}>₹299 <span style={{fontSize:'0.9rem', color:'#888'}}> / mo</span></div>
+                  <button onClick={() => handlePayment("Pragati Monthly", 29900)} style={{ width: '100%', background: '#E91E63', color: '#fff', padding: '12px', borderRadius: '12px', border: 'none', fontWeight: 800, cursor: 'pointer', marginBottom: '10px' }}>Buy Monthly</button>
+                  <button onClick={() => handlePayment("Pragati Yearly", 299000)} style={{ width: '100%', border: '2px solid #E91E63', color: '#E91E63', background: 'white', padding: '12px', borderRadius: '12px', fontWeight: 800, cursor: 'pointer' }}>Buy Yearly (₹2,990)</button>
+                </div>
+
+                {/* UDAAN PLAN */}
+                <div style={{ border: '2px solid #2155FF', borderRadius: '20px', padding: '20px', background: 'rgba(33, 85, 255, 0.02)' }}>
+                  <h3 style={{ margin: 0, color: '#2155FF' }}>Udaan (Premium)</h3>
+                  <div style={{ fontSize: '1.5rem', fontWeight: 800, margin: '15px 0' }}>₹499 <span style={{fontSize:'0.9rem', color:'#888'}}> / mo</span></div>
+                  <button onClick={() => handlePayment("Udaan Monthly", 49900)} style={{ width: '100%', background: '#2155FF', color: '#fff', padding: '12px', borderRadius: '12px', border: 'none', fontWeight: 800, cursor: 'pointer', marginBottom: '10px' }}>Buy Monthly</button>
+                  <button onClick={() => handlePayment("Udaan Yearly", 499000)} style={{ width: '100%', border: '2px solid #2155FF', color: '#2155FF', background: 'white', padding: '12px', borderRadius: '12px', fontWeight: 800, cursor: 'pointer' }}>Buy Yearly (₹4,990)</button>
+                </div>
+
               </div>
+              
+              <button onClick={() => setShowUpgradePopup(false)} style={{ background: 'transparent', color: '#94a3b8', padding: '20px 0 0', border: 'none', fontSize: '1rem', fontWeight: 700, cursor: 'pointer' }}>Maybe Later</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* THE BEAUTIFUL GLASSMORPHIC EDIT MODAL */}
+      {/* EDIT MODAL */}
       {editingProduct && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(15, 23, 42, 0.3)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 2000, animation: 'modalFadeIn 0.3s forwards' }}>
           <div className="glass-panel" style={{ width: '90%', maxWidth: '500px', animation: 'modalSlideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards', background: 'rgba(255,255,255,0.95)' }}>
@@ -301,8 +344,8 @@ const handleAddProduct = async (e) => {
             </div>
 
             <div style={{ display: 'flex', gap: '15px', justifyContent: 'flex-end' }}>
-              <button onClick={() => setEditingProduct(null)} style={{ padding: '16px 25px', borderRadius: '14px', border: '1.5px solid #e2e8f0', background: '#f8fafc', color: '#475569', fontWeight: 800, cursor: 'pointer', transition: '0.2s', fontSize: '1rem' }} onMouseOver={e=>{e.target.style.background='#e2e8f0'}} onMouseOut={e=>{e.target.style.background='#f8fafc'}}>Cancel</button>
-              <button onClick={handleSaveEdit} className="btn-action" style={{ background: '#10b981', flex: 'none', padding: '16px 35px', borderRadius: '14px' }}>Save Changes</button>
+              <button onClick={() => setEditingProduct(null)} style={{ padding: '16px 25px', borderRadius: '14px', border: '1.5px solid #e2e8f0', background: '#f8fafc', color: '#475569', fontWeight: 800, cursor: 'pointer', fontSize: '1rem' }}>Cancel</button>
+              <button onClick={handleSaveEdit} style={{ background: '#10b981', color: 'white', padding: '16px 35px', borderRadius: '14px', border: 'none', fontWeight: 800, cursor: 'pointer' }}>Save Changes</button>
             </div>
           </div>
         </div>
@@ -311,7 +354,7 @@ const handleAddProduct = async (e) => {
       {/* NAVBAR */}
       <nav style={{ padding: '15px 5vw', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.5)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.5)', position: 'sticky', top: 0, zIndex: 100 }}>
         <h1 style={{ margin: 0, fontSize: '1.6rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span style={{ fontSize: '2.2rem', filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.1))' }}>📦</span> 
+          <span style={{ fontSize: '2.2rem' }}>📦</span> 
           <span style={{ fontWeight: 900, letterSpacing: '-0.5px', color: '#0f172a' }}>VyaparSetu Vault</span>
         </h1>
         <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
@@ -324,15 +367,14 @@ const handleAddProduct = async (e) => {
 
       <main style={{ maxWidth: '1400px', margin: '40px auto 0', padding: '0 5vw', display: 'flex', flexWrap: 'wrap', gap: '40px', alignItems: 'flex-start' }}>
         
-        {/* ADD ITEM PANEL */}
         <div style={{ flex: '1 1 380px' }} className="glass-panel">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' }}>
             <h2 style={{ margin: 0, fontSize: '1.8rem', fontWeight: 800, color: '#0f172a' }}>Add New Item</h2>
-            <button onClick={() => setShowGlobalSettings(!showGlobalSettings)} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', fontSize: '1.2rem', cursor: 'pointer', color: '#475569', padding: '6px 12px', transition: '0.2s' }} onMouseOver={e=>{e.target.style.background='#e2e8f0'}} onMouseOut={e=>{e.target.style.background='#f8fafc'}}>⚙️</button>
+            <button onClick={() => setShowGlobalSettings(!showGlobalSettings)} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', fontSize: '1.2rem', cursor: 'pointer', color: '#475569', padding: '6px 12px' }}>⚙️</button>
           </div>
 
           {showGlobalSettings && (
-            <div style={{ marginBottom: '25px', padding: '20px', background: 'rgba(255,255,255,0.6)', borderRadius: '16px', border: '1px dashed #cbd5e1', display: 'flex', gap: '10px', flexWrap: 'wrap', animation: 'popIn 0.3s ease-out' }}>
+            <div style={{ marginBottom: '25px', padding: '20px', background: 'rgba(255,255,255,0.6)', borderRadius: '16px', border: '1px dashed #cbd5e1', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
               <div style={{ width: '100%', fontSize: '0.85rem', fontWeight: 800, color: '#64748b', marginBottom: '5px' }}>DISPLAY SETTINGS</div>
               <button className={`setting-btn ${showStock ? 'active' : ''}`} onClick={() => setShowStock(!showStock)}>📦 In Stock</button>
               <button className={`setting-btn ${showRate ? 'active' : ''}`} onClick={() => setShowRate(!showRate)}>💰 Default Rate</button>
@@ -357,13 +399,10 @@ const handleAddProduct = async (e) => {
           </form>
         </div>
 
-        {/* VAULT LIST PANEL */}
         <div style={{ flex: '2 1 550px' }}>
-          
-          {/* Floating Search Bar */}
           <div style={{ position: 'relative', marginBottom: '30px' }}>
             <span style={{ position: 'absolute', left: '25px', top: '50%', transform: 'translateY(-50%)', fontSize: '1.3rem', color: '#94a3b8' }}>🔍</span>
-            <input type="text" className="ui-input" placeholder="Search vault by name or code..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} style={{ padding: '22px 25px 22px 60px', borderRadius: '20px', fontSize: '1.15rem', boxShadow: '0 10px 30px rgba(0,0,0,0.03)', border: '1px solid #fff' }} />
+            <input type="text" className="ui-input" placeholder="Search vault by name or code..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} style={{ padding: '22px 25px 22px 60px', borderRadius: '20px', fontSize: '1.15rem' }} />
           </div>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>

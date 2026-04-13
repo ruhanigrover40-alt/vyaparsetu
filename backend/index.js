@@ -72,13 +72,13 @@ app.post('/api/login', async (req, res) => {
 
 
 // ==========================================
-// 📦 INVENTORY ROUTES (Updated for New UI)
+// 📦 INVENTORY ROUTES
 // ==========================================
 
 // 1. The "Drive-Thru Window" (Gets all products, newest first)
 app.get('/api/products', async (req, res) => {
   try {
-    const allProducts = await Product.find({}).sort({ createdAt: -1 }); // Added sorting!
+    const allProducts = await Product.find({}).sort({ createdAt: -1 }); 
     res.status(200).json(allProducts);
   } catch (error) {
     console.log("Error fetching products:", error);
@@ -89,7 +89,6 @@ app.get('/api/products', async (req, res) => {
 // 2. The "Receiving Window" (Adds a new product properly WITH FREE LIMITS)
 app.post('/api/products', async (req, res) => {
   try {
-    // THE MISSING LINE: Unpack all the data from the React frontend!
     const { nameHindi, nameEnglish, productId, rate, stock, baseUnit, shopId } = req.body;
     const targetShop = shopId;
 
@@ -102,8 +101,11 @@ app.post('/api/products', async (req, res) => {
     console.log("----------------------------\n");
 
     // --- FREE TIER LIMIT CHECK ---
-    if (user && user.plan === "free") {
+    // --- FREE TIER LIMIT CHECK ---
+    // If it is your dad's shop, this check is completely ignored!
+    if (user && user.plan === "free" && targetShop !== "riturajgrover") {
       const startOfMonth = new Date();
+      // ... the rest of the code stays the same
       startOfMonth.setDate(1); 
       startOfMonth.setHours(0, 0, 0, 0);
       
@@ -168,26 +170,32 @@ app.delete('/api/products/:id', async (req, res) => {
     res.status(500).json({ message: "Failed to delete product", error });
   }
 });
-// --- RAZORPAY PAYMENT ROUTE ---
+
+// ==========================================
+// 💳 RAZORPAY PAYMENT ROUTE (UPDATED FOR DYNAMIC PRICING)
+// ==========================================
 app.post('/api/create-order', async (req, res) => {
   try {
-    // 1. Initialize Razorpay with your hidden keys
+    // 1. Get the exact amount sent from the React button
+    const { amount } = req.body; 
+
+    // 2. Initialize Razorpay with your hidden keys
     const razorpay = new Razorpay({
       key_id: process.env.RAZORPAY_KEY_ID,
       key_secret: process.env.RAZORPAY_KEY_SECRET,
     });
 
-    // 2. Set the bill details (e.g., ₹499 for a Pro upgrade)
+    // 3. Set the options using the dynamic amount
     const options = {
-      amount: 49900, // Amount in paise (49900 paise = ₹499)
+      amount: amount, // NO MORE HARDCODED 49900! It uses whatever the button sends.
       currency: "INR",
-      receipt: "receipt_order_1"
+      receipt: "receipt_order_" + Math.floor(Math.random() * 1000)
     };
 
-    // 3. Ask Razorpay to generate a unique Order ID
+    // 4. Ask Razorpay to generate a unique Order ID
     const order = await razorpay.orders.create(options);
     
-    // 4. Send that Order ID back to the React frontend
+    // 5. Send that Order ID back to the React frontend
     res.json(order);
 
   } catch (error) {
@@ -198,17 +206,21 @@ app.post('/api/create-order', async (req, res) => {
 
 
 // ==========================================
-// 🧾 KHATA & BILLING ROUTES (Untouched)
+// 🧾 KHATA & BILLING ROUTES
 // ==========================================
 
 // 1. SAVE A NEW BILL (WITH FREE LIMITS)
 app.post('/api/bills', async (req, res) => {
   try {
+    const { shopId } = req.body; // Fixed undefined variable bug
     const targetShop = shopId;
 
     // --- FREE TIER LIMIT CHECK ---
+    // --- FREE TIER LIMIT CHECK ---
     const user = await User.findOne({ shopId: targetShop });
-    if (user && user.plan === "free") {
+    if (user && user.plan === "free" && targetShop !== "riturajgrover") {
+      // Find the start of the current month
+      // ... the rest of the code stays the same
       // Find the start of the current month
       const startOfMonth = new Date();
       startOfMonth.setDate(1); 

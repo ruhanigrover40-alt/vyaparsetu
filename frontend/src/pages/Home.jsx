@@ -4,6 +4,53 @@ import { useNavigate } from 'react-router-dom';
 function Home() {
   const navigate = useNavigate();
   const [activeFeature, setActiveFeature] = useState(0);
+  // THE MISSING PAYMENT FUNCTION FOR THE HOME PAGE
+  const handlePayment = async (planName, price) => {
+    try {
+      // 🛑 Pointing safely to your LIVE backend!
+      const response = await fetch('https://vyaparsetu-backend.onrender.com/api/create-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: price }) 
+      });
+      const order = await response.json();
+
+      const options = {
+        key: "rzp_test_ScwLVZpL8SQvfU", 
+        amount: order.amount,
+        currency: "INR",
+        name: "VyaparSetu",
+        description: `Upgrade to ${planName}`,
+        order_id: order.id, 
+        
+        // Force UPI to show here as well
+        config: {
+          display: {
+            blocks: {
+              banks: {
+                name: 'Choose Payment Method',
+                instruments: [{ method: 'upi' }, { method: 'card' }, { method: 'netbanking' }]
+              }
+            },
+            sequence: ['block.banks'],
+            preferences: { show_default_blocks: true }
+          }
+        },
+
+        handler: function (response) {
+          alert(`Success! You have subscribed to the ${planName} plan.`);
+        },
+        theme: { color: "#E91E63" }
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+
+    } catch (error) {
+      console.error("Payment Error:", error);
+      alert("Unable to open payment window.");
+    }
+  };
 
   // Smooth scroll function for the navbar
   const scrollToSection = (id) => {
@@ -267,55 +314,40 @@ function Home() {
       </section>
 
       {/* VIBRANT PRICING SECTION WITH YEARLY TOGGLE */}
-      <section id="pricing" style={{ padding: '140px 5vw', background: 'linear-gradient(135deg, #FFCFF5 0%, #D6E4FF 100%)', position: 'relative' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', textAlign: 'center', position: 'relative', zIndex: 5 }}>
-          <h3 style={{ fontSize: '4rem', fontWeight: 800, marginBottom: '20px', letterSpacing: '-1.5px', color: '#111' }}>Simple, honest pricing</h3>
-          <p style={{ color: '#444', fontSize: '1.4rem', marginBottom: '80px', fontWeight: 600 }}>Start for free, upgrade when you need more power.</p>
-          
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '40px' }}>
-            
-            <div className="pricing-card">
-              <h4 style={{ fontSize: '2rem', fontWeight: 800, color: '#111' }}>Neev (Starter)</h4>
-              <div style={{ fontSize: '4rem', fontWeight: 800, margin: '20px 0', color: '#111' }}>₹0 <span style={{ fontSize: '1.2rem', color: '#888' }}>/ mo</span></div>
-              <div style={{ color: '#25D366', fontWeight: 800, marginBottom: '20px', fontSize: '1rem' }}>Free Forever</div>
-              <ul style={{ listStyle: 'none', padding: 0, textAlign: 'left', lineHeight: '3', fontWeight: 700, color: '#555', fontSize: '1.1rem' }}>
-                <li><span style={{color: '#2155FF', marginRight: '10px'}}>✓</span> 10 Inventory Items</li>
-                <li><span style={{color: '#2155FF', marginRight: '10px'}}>✓</span> 10 Bills / Month</li>
-                <li><span style={{color: '#2155FF', marginRight: '10px'}}>✓</span> Standard Printing</li>
-              </ul>
-              <button style={{ width: '100%', padding: '20px', borderRadius: '18px', border: '3px solid #eee', background: 'transparent', fontWeight: 800, marginTop: '20px', cursor: 'pointer', fontSize: '1.1rem', transition: '0.3s' }} onMouseOver={e => {e.target.style.background='#111'; e.target.style.color='#fff'}} onMouseOut={e => {e.target.style.background='transparent'; e.target.style.color='#111'}}>Start Free</button>
-            </div>
+{/* VIBRANT PRICING SECTION */}
+<section id="pricing" style={{ padding: '140px 5vw', background: 'linear-gradient(135deg, #FFCFF5 0%, #D6E4FF 100%)', position: 'relative' }}>
+  <div style={{ maxWidth: '1200px', margin: '0 auto', textAlign: 'center', position: 'relative', zIndex: 5 }}>
+    <h3 style={{ fontSize: '4rem', fontWeight: 800, marginBottom: '20px', letterSpacing: '-1.5px', color: '#111' }}>Simple, honest pricing</h3>
+    <p style={{ color: '#444', fontSize: '1.4rem', marginBottom: '80px', fontWeight: 600 }}>Start for free, upgrade when you need more power.</p>
+    
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '40px' }}>
+      
+      {/* Card 1: Neev */}
+      <div className="pricing-card" style={{ background: '#fff', padding: '40px', borderRadius: '30px' }}>
+        <h4 style={{ fontSize: '2rem', fontWeight: 800 }}>Neev (Starter)</h4>
+        <div style={{ fontSize: '3rem', fontWeight: 800 }}>₹0</div>
+        <button style={{ width: '100%', padding: '15px', marginTop: '20px', borderRadius: '12px' }}>Current Plan</button>
+      </div>
 
-            {/* Glowing Pragati Card */}
-            <div className="pricing-card glowing-card" style={{ background: '#fff', transform: 'scale(1.05)', zIndex: 10 }}>
-              <div style={{ position: 'absolute', top: '-22px', left: '50%', transform: 'translateX(-50%)', background: '#E91E63', color: '#fff', padding: '10px 30px', borderRadius: '30px', fontSize: '0.95rem', fontWeight: 800, letterSpacing: '1.5px', boxShadow: '0 10px 20px rgba(233, 30, 99, 0.3)' }}>RECOMMENDED</div>
-              <h4 style={{ fontSize: '2rem', fontWeight: 800, color: '#111' }}>Pragati (Growth)</h4>
-              <div style={{ fontSize: '4rem', fontWeight: 800, margin: '20px 0 5px', color: '#111', letterSpacing: '-2px' }}>₹299 <span style={{ fontSize: '1.2rem', color: '#888', letterSpacing: '0' }}>/ mo</span></div>
-              <div style={{ color: '#E91E63', fontWeight: 800, marginBottom: '20px', fontSize: '1rem' }}>Or ₹2,990 / year (Save 16%)</div>
-              
-              <ul style={{ listStyle: 'none', padding: 0, textAlign: 'left', lineHeight: '3', fontWeight: 700, fontSize: '1.1rem', color: '#222' }}>
-                <li><span style={{color: '#E91E63', marginRight: '10px', fontSize: '1.3rem'}}>✓</span> Unlimited Billing</li>
-                <li><span style={{color: '#E91E63', marginRight: '10px', fontSize: '1.3rem'}}>✓</span> WhatsApp Sharing</li>
-                <li><span style={{color: '#E91E63', marginRight: '10px', fontSize: '1.3rem'}}>✓</span> Digital Khata Tracker</li>
-                <li><span style={{color: '#E91E63', marginRight: '10px', fontSize: '1.3rem'}}>✓</span> Advanced Analytics</li>
-              </ul>
-              <button onClick={() => navigate('/login', { state: { register: true } })} style={{ width: '100%', padding: '22px', borderRadius: '18px', border: 'none', background: '#E91E63', color: '#fff', fontWeight: 800, marginTop: '20px', fontSize: '1.2rem', cursor: 'pointer', boxShadow: '0 15px 30px rgba(233, 30, 99, 0.4)', transition: '0.3s' }} onMouseOver={e => e.target.style.transform='translateY(-5px)'} onMouseOut={e => e.target.style.transform='translateY(0)'}>Upgrade to Pragati</button>
-            </div>
+      {/* Card 2: Pragati */}
+      <div className="pricing-card" style={{ background: '#fff', padding: '40px', borderRadius: '30px', transform: 'scale(1.05)', border: '2px solid #E91E63' }}>
+        <h4 style={{ fontSize: '2rem', fontWeight: 800 }}>Pragati (Growth)</h4>
+        <div style={{ fontSize: '3rem', fontWeight: 800 }}>₹299</div>
+        <button onClick={() => handlePayment("Pragati Monthly", 29900)} style={{ width: '100%', padding: '15px', marginTop: '10px', background: '#E91E63', color: '#fff', borderRadius: '12px', border: 'none', cursor: 'pointer' }}>Buy Monthly</button>
+        <button onClick={() => handlePayment("Pragati Yearly", 299000)} style={{ width: '100%', padding: '15px', marginTop: '10px', background: '#fff', border: '2px solid #E91E63', borderRadius: '12px', cursor: 'pointer' }}>Buy Yearly</button>
+      </div>
 
-            <div className="pricing-card">
-              <h4 style={{ fontSize: '2rem', fontWeight: 800, color: '#111' }}>Udaan (Premium)</h4>
-              <div style={{ fontSize: '4rem', fontWeight: 800, margin: '20px 0 5px', color: '#111' }}>₹499 <span style={{ fontSize: '1.2rem', color: '#888' }}>/ mo</span></div>
-              <div style={{ color: '#2155FF', fontWeight: 800, marginBottom: '20px', fontSize: '1rem' }}>Or ₹4,990 / year (Save 16%)</div>
-              <ul style={{ listStyle: 'none', padding: 0, textAlign: 'left', lineHeight: '3', fontWeight: 700, color: '#555', fontSize: '1.1rem' }}>
-                <li><span style={{color: '#2155FF', marginRight: '10px'}}>✓</span> Everything in Pragati</li>
-                <li><span style={{color: '#2155FF', marginRight: '10px'}}>✓</span> Advanced Excel Exports</li>
-                <li><span style={{color: '#2155FF', marginRight: '10px'}}>✓</span> Multi-User Login</li>
-              </ul>
-              <button style={{ width: '100%', padding: '20px', borderRadius: '18px', border: '3px solid #eee', background: 'transparent', fontWeight: 800, marginTop: '20px', cursor: 'pointer', fontSize: '1.1rem', transition: '0.3s' }} onMouseOver={e => {e.target.style.background='#111'; e.target.style.color='#fff'}} onMouseOut={e => {e.target.style.background='transparent'; e.target.style.color='#111'}}>Upgrade to Udaan</button>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Card 3: Udaan */}
+      <div className="pricing-card" style={{ background: '#fff', padding: '40px', borderRadius: '30px' }}>
+        <h4 style={{ fontSize: '2rem', fontWeight: 800 }}>Udaan (Premium)</h4>
+        <div style={{ fontSize: '3rem', fontWeight: 800 }}>₹499</div>
+        <button onClick={() => handlePayment("Udaan Monthly", 49900)} style={{ width: '100%', padding: '15px', marginTop: '10px', background: '#2155FF', color: '#fff', borderRadius: '12px', border: 'none', cursor: 'pointer' }}>Buy Monthly</button>
+        <button onClick={() => handlePayment("Udaan Yearly", 499000)} style={{ width: '100%', padding: '15px', marginTop: '10px', background: '#fff', border: '2px solid #2155FF', borderRadius: '12px', cursor: 'pointer' }}>Buy Yearly</button>
+      </div>
+
+    </div> {/* This closes the grid div */}
+  </div> {/* This closes the container div */}
+</section> {/* This closes the section */}
 
       {/* MASSIVE 3D SUPPORT SECTION */}
       <section id="support" style={{ padding: '140px 5vw', textAlign: 'center', background: '#fff', position: 'relative', overflow: 'hidden' }}>
