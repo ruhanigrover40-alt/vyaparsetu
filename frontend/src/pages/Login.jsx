@@ -26,7 +26,7 @@ function Login({ setShopDetails }) {
     setError('');
     setLoading(true);
 
-    const endpoint = isRegistering ? 'http://localhost:5000/api/register' : 'http://localhost:5000/api/login';
+    const endpoint = isRegistering ? 'https://vyaparsetu-backend.onrender.com/api/register' : 'https://vyaparsetu-backend.onrender.com/api/login';
     
     const payload = isRegistering 
       ? { shopId, shopName, contactInfo, password } 
