@@ -75,13 +75,44 @@ app.post('/api/login', async (req, res) => {
 // 📦 INVENTORY ROUTES
 // ==========================================
 
-// 1. The "Drive-Thru Window" (Gets all products, newest first)
+// 1A. The "Specific Door" (If React asks via URL params like /api/products/riturajgrover)
+app.get('/api/products/:shopId', async (req, res) => {
+  try {
+    const targetShop = req.params.shopId;
+    console.log(`\n--- 🚚 FETCH REQUEST (PARAMS) ---`);
+    console.log(`Looking for items belonging to: ${targetShop}`);
+
+    // ONLY find products where the shopId matches!
+    const userProducts = await Product.find({ shopId: targetShop }).sort({ createdAt: -1 }); 
+    
+    console.log(`✅ Found ${userProducts.length} items! Sending to frontend.`);
+    res.status(200).json(userProducts);
+  } catch (error) {
+    console.log("🚨 Error fetching products:", error);
+    res.status(500).json({ message: "Failed to fetch products" });
+  }
+});
+
+// 1B. The "Query Door" (If React asks via query string like /api/products?shopId=riturajgrover)
 app.get('/api/products', async (req, res) => {
   try {
-    const allProducts = await Product.find({}).sort({ createdAt: -1 }); 
-    res.status(200).json(allProducts);
+    const targetShop = req.query.shopId;
+    
+    // Security Check: If they don't tell us their shopId, give them nothing.
+    if (!targetShop) {
+      console.log("⚠️ Blocked: Someone tried to fetch all products without a shopId!");
+      return res.status(400).json({ message: "Shop ID is required" });
+    }
+
+    console.log(`\n--- 🚚 FETCH REQUEST (QUERY) ---`);
+    console.log(`Looking for items belonging to: ${targetShop}`);
+
+    const userProducts = await Product.find({ shopId: targetShop }).sort({ createdAt: -1 }); 
+    
+    console.log(`✅ Found ${userProducts.length} items! Sending to frontend.`);
+    res.status(200).json(userProducts);
   } catch (error) {
-    console.log("Error fetching products:", error);
+    console.log("🚨 Error fetching products:", error);
     res.status(500).json({ message: "Failed to fetch products" });
   }
 });
