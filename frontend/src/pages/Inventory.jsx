@@ -25,7 +25,7 @@ function Inventory({ shopDetails, setShopDetails }) {
 
   useEffect(() => {
     if (shopDetails?.id === 'roopchand') {
-      fetch('http://localhost:5000/api/products')
+      fetch('https://vyaparsetu-backend.onrender.com/api/products')
         .then(res => res.json())
         .then(data => { 
           const formattedData = data.map(p => ({ ...p, stock: p.stock || 0, rate: p.rate || 0, nameEnglish: p.nameEnglish || '' }));
@@ -56,7 +56,7 @@ const handleAddProduct = async (e) => {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/api/products', {
+      const response = await fetch('https://vyaparsetu-backend.onrender.com/api/products', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -99,7 +99,7 @@ const handleAddProduct = async (e) => {
     
     if (shopDetails?.id === 'roopchand') {
       try {
-        const response = await fetch(`http://localhost:5000/api/products/${id}`, { method: 'DELETE' });
+        const response = await fetch(`https://vyaparsetu-backend.onrender.com/api/products/${id}`, { method: 'DELETE' });
         if (response.ok) {
           setProducts(products.filter(p => p._id !== id));
         } else {
@@ -132,7 +132,7 @@ const handleAddProduct = async (e) => {
 
     if (shopDetails?.id === 'roopchand') {
       try {
-        const response = await fetch(`http://localhost:5000/api/products/${productToSave._id}`, {
+        const response = await fetch(`https://vyaparsetu-backend.onrender.com/api/products/${productToSave._id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(productToSave)

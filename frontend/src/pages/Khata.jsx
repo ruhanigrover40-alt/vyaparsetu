@@ -14,7 +14,7 @@ function Khata({ shopDetails, setShopDetails }) {
     const fetchBills = async () => {
       const shopId = shopDetails?.id || 'roopchand';
       try {
-        const res = await fetch(`http://localhost:5000/api/bills/${shopId}`);
+        const res = await fetch(`https://vyaparsetu-backend.onrender.com/api/bills/${shopId}`);
         const data = await res.json();
         setBills(data);
       } catch (err) {
@@ -35,7 +35,7 @@ function Khata({ shopDetails, setShopDetails }) {
   const handleDelete = async (id) => {
     if(window.confirm('🚨 Are you sure you want to delete this record? This cannot be undone.')) {
       try {
-        await fetch(`http://localhost:5000/api/bills/${id}`, { method: 'DELETE' });
+        await fetch(`https://vyaparsetu-backend.onrender.com/api/bills/${id}`, { method: 'DELETE' });
         setBills(bills.filter(b => b.id !== id)); // Remove from screen instantly
       } catch (err) {
         alert("Failed to delete record from database.");
@@ -47,7 +47,7 @@ function Khata({ shopDetails, setShopDetails }) {
   const handleSettle = async (id) => {
     if(window.confirm('Mark this Udhaar as fully paid?')) {
       try {
-        const res = await fetch(`http://localhost:5000/api/bills/settle/${id}`, { method: 'PUT' });
+        const res = await fetch(`https://vyaparsetu-backend.onrender.com/api/bills/settle/${id}`, { method: 'PUT' });
         if (res.ok) {
           const updatedBill = await res.json();
           // Update the screen instantly

@@ -17,7 +17,7 @@ function Billing({ shopDetails, setShopDetails }) {
 
   useEffect(() => {
     if (shopDetails?.id === 'roopchand') {
-      fetch('http://localhost:5000/api/products')
+      fetch('https://vyaparsetu-backend.onrender.com/api/products')
         .then(res => res.json())
         .then(data => setProducts(data))
         .catch(err => console.error(err));
@@ -84,7 +84,7 @@ function Billing({ shopDetails, setShopDetails }) {
 
     try {
       // Send to MongoDB!
-      await fetch('http://localhost:5000/api/bills', {
+      await fetch('https://vyaparsetu-backend.onrender.com/api/bills', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newBill)
