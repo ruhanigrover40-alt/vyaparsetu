@@ -101,11 +101,8 @@ app.post('/api/products', async (req, res) => {
     console.log("----------------------------\n");
 
     // --- FREE TIER LIMIT CHECK ---
-    // --- FREE TIER LIMIT CHECK ---
-    // If it is your dad's shop, this check is completely ignored!
     if (user && user.plan === "free" && targetShop !== "riturajgrover") {
       const startOfMonth = new Date();
-      // ... the rest of the code stays the same
       startOfMonth.setDate(1); 
       startOfMonth.setHours(0, 0, 0, 0);
       
@@ -115,25 +112,37 @@ app.post('/api/products', async (req, res) => {
       });
 
       if (currentItemCount >= 10) {
+        console.log("⛔ Blocked: Free tier limit reached.");
         return res.status(403).json({ message: "Free plan limit reached (10 items/month). Please upgrade to Premium!" });
       }
     }
 
-    // --- SAVE TO DATABASE ---
-    const newProduct = await Product.create({
-      shopId: targetShop,
-      nameHindi: nameHindi || "",
-      nameEnglish: nameEnglish || "", 
-      productId: productId,
-      rate: rate || 0, 
-      stock: stock || 0, 
-      baseUnit: baseUnit || "Nag"
-    });
+    console.log("4. VIP Check Passed. Attempting to save to MongoDB...");
 
-    res.status(201).json({ message: "Product added!", product: newProduct });
+    // --- AGGRESSIVE SAVE WITH TYPE CHECKING ---
+    try {
+      const newProduct = await Product.create({
+        shopId: targetShop,
+        nameHindi: nameHindi || "",
+        nameEnglish: nameEnglish || "", 
+        productId: productId || Date.now().toString(), // Fills missing ID just in case
+        rate: Number(rate) || 0,   // Forces it to be a valid number
+        stock: Number(stock) || 0, // Forces it to be a valid number
+        baseUnit: baseUnit || "Nag"
+      });
+
+      console.log("5. ✅ SUCCESS! Item saved with ID:", newProduct._id);
+      return res.status(201).json({ message: "Product added!", product: newProduct });
+
+    } catch (dbError) {
+      // If MongoDB hates the data, it will get caught right here!
+      console.log("🚨 MONGODB REJECTED THE SAVE:", dbError.message);
+      return res.status(500).json({ message: "Database rejected the item", error: dbError.message });
+    }
+
   } catch (error) {
-    console.log("Error adding product:", error);
-    res.status(500).json({ message: "Failed to add product", error });
+    console.log("🚨 FATAL SERVER ERROR:", error.message);
+    return res.status(500).json({ message: "Server crashed before saving", error: error.message });
   }
 });
 
