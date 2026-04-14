@@ -383,7 +383,7 @@ function Billing({ shopDetails, setShopDetails }) {
               <div style={{ textAlign: 'center', padding: '60px 20px', color: '#94a3b8', fontWeight: 600, background: 'rgba(255,255,255,0.5)', borderRadius: '20px', border: '2px dashed #cbd5e1' }}>No items found in vault.</div>
             ) : (
               filteredProducts.map(p => (
-                <div key={p._id} className="product-card" onClick={() => addToCart(p)} style={{ marginBottom: '16px' }}>
+                <div key={p._id} className="product-card" onClick={() => addToCart(p)} style={{ marginBottom: '16px', padding: '16px', height: 'auto', minHeight: '80px' }}>
                   <div>
                     {p.nameHindi && p.nameEnglish ? (
                       <>
