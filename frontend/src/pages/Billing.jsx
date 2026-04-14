@@ -16,14 +16,21 @@ function Billing({ shopDetails, setShopDetails }) {
   const [paymentMode, setPaymentMode] = useState('Cash'); 
 
   useEffect(() => {
-    if (shopDetails?.id === 'roopchand') {
-      fetch('https://vyaparsetu-backend.onrender.com/api/products')
+    // ALWAYS fetch from the live cloud database!
+    if (shopDetails) {
+      // Notice the backticks (`) and the ?shopId= added to the end of the URL
+      fetch(`https://vyaparsetu-backend.onrender.com/api/products?shopId=${shopDetails.id}`)
         .then(res => res.json())
-        .then(data => setProducts(data))
-        .catch(err => console.error(err));
-    } else if (shopDetails) {
-      const localData = JSON.parse(localStorage.getItem(`inventory_${shopDetails.id}`)) || [];
-      setProducts(localData);
+        .then(data => {
+          // If the backend returns an error message instead of an array, catch it
+          if (!Array.isArray(data)) {
+              console.error("Backend returned an error:", data);
+              setProducts([]);
+              return;
+          }
+          setProducts(data);
+        })
+        .catch(err => console.error("Error fetching products:", err));
     }
   }, [shopDetails]);
 
