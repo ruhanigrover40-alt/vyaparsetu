@@ -23,20 +23,25 @@ function Inventory({ shopDetails, setShopDetails }) {
   const [showUpgradePopup, setShowUpgradePopup] = useState(false);
   const [upgradeMessage, setUpgradeMessage] = useState("");
 
-  useEffect(() => {
-    if (shopDetails?.id === 'roopchand') {
-      fetch('https://vyaparsetu-backend.onrender.com/api/products')
+useEffect(() => {
+    // If a user is logged in, ALWAYS fetch from the live cloud database!
+    if (shopDetails) {
+      // Notice the backticks (`) and the ?shopId= added to the end of the URL
+      fetch(`https://vyaparsetu-backend.onrender.com/api/products?shopId=${shopDetails.id}`)
         .then(res => res.json())
         .then(data => { 
+          // If the backend returns an error message instead of an array, catch it
+          if (!Array.isArray(data)) {
+              console.error("Backend returned an error:", data);
+              setProducts([]);
+              setLoading(false);
+              return;
+          }
           const formattedData = data.map(p => ({ ...p, stock: p.stock || 0, rate: p.rate || 0, nameEnglish: p.nameEnglish || '' }));
           setProducts(formattedData);
           setLoading(false); 
         })
         .catch(err => { console.error(err); setLoading(false); });
-    } else if (shopDetails) {
-      const localData = JSON.parse(localStorage.getItem(`inventory_${shopDetails.id}`)) || [];
-      setProducts(localData);
-      setLoading(false);
     }
   }, [shopDetails]);
 
@@ -94,27 +99,21 @@ const handleAddProduct = async (e) => {
     if(codeInputRef.current) codeInputRef.current.focus(); 
   };
 
-  const handleDeleteProduct = async (id) => {
+const handleDeleteProduct = async (id) => {
     if (!window.confirm("Delete this item?")) return;
     
-    if (shopDetails?.id === 'roopchand') {
-      try {
-        const response = await fetch(`https://vyaparsetu-backend.onrender.com/api/products/${id}`, { method: 'DELETE' });
-        if (response.ok) {
-          setProducts(products.filter(p => p._id !== id));
-        } else {
-           if (window.confirm("Server error: This might be a 'ghost' item. Remove it from your screen anyway?")) {
-              setProducts(products.filter(p => p._id !== id));
-           }
-        }
-      } catch (error) { 
-        console.error(error); 
+    try {
+      const response = await fetch(`https://vyaparsetu-backend.onrender.com/api/products/${id}`, { method: 'DELETE' });
+      if (response.ok) {
         setProducts(products.filter(p => p._id !== id));
+      } else {
+         if (window.confirm("Server error: This might be a 'ghost' item. Remove it from your screen anyway?")) {
+            setProducts(products.filter(p => p._id !== id));
+         }
       }
-    } else {
-      const updatedList = products.filter(p => p._id !== id);
-      setProducts(updatedList);
-      localStorage.setItem(`inventory_${shopDetails.id}`, JSON.stringify(updatedList));
+    } catch (error) { 
+      console.error("Error deleting:", error); 
+      setProducts(products.filter(p => p._id !== id));
     }
   };
 
