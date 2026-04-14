@@ -18,11 +18,9 @@ function Billing({ shopDetails, setShopDetails }) {
   useEffect(() => {
     // ALWAYS fetch from the live cloud database!
     if (shopDetails) {
-      // Notice the backticks (`) and the ?shopId= added to the end of the URL
       fetch(`https://vyaparsetu-backend.onrender.com/api/products?shopId=${shopDetails.id}`)
         .then(res => res.json())
         .then(data => {
-          // If the backend returns an error message instead of an array, catch it
           if (!Array.isArray(data)) {
               console.error("Backend returned an error:", data);
               setProducts([]);
@@ -41,16 +39,17 @@ function Billing({ shopDetails, setShopDetails }) {
     }
   };
 
+  // FIX 1: Blank default values so no backspacing is needed!
   const addToCart = (product) => {
     const existing = cart.find(item => item._id === product._id);
     if (!existing) {
-      setCart([...cart, { ...product, qty: 1 }]);
+      setCart([...cart, { ...product, qty: '', rate: product.rate || '' }]);
     }
   };
 
   const addCustomItem = () => {
     const customId = 'custom_' + Date.now();
-    setCart([...cart, { _id: customId, nameEnglish: 'Item Name', nameHindi: 'विवरण', rate: 0, qty: 1 }]);
+    setCart([...cart, { _id: customId, nameEnglish: '', nameHindi: '', rate:'', qty:''}]);
   };
 
   const updateCartItem = (id, field, value) => {
@@ -66,10 +65,15 @@ function Billing({ shopDetails, setShopDetails }) {
     setCart(cart.filter(item => item._id !== id));
   };
 
+  // FIX 4: Perfected Math Logic for Udhaar
   const totalAmount = cart.reduce((sum, item) => sum + (Number(item.rate || 0) * Number(item.qty || 0)), 0);
   
-  let paid = amountPaid === '' ? totalAmount : Number(amountPaid);
-  if (paymentMode === 'Udhaar') paid = 0; 
+  let paid = 0;
+  if (amountPaid !== '') {
+    paid = Number(amountPaid);
+  } else {
+    paid = (paymentMode === 'Udhaar') ? 0 : totalAmount;
+  }
   
   const pendingAmount = Math.max(0, totalAmount - paid);
 
@@ -77,7 +81,7 @@ function Billing({ shopDetails, setShopDetails }) {
     if (cart.length === 0) return false;
     
     const newBill = {
-      shopId: shopDetails?.id || 'roopchand', // Attach to your shop
+      shopId: shopDetails?.id, 
       id: Date.now(),
       date: new Date().toLocaleDateString('en-GB'),
       customerName: customerName.trim() || 'Cash Customer',
@@ -90,7 +94,6 @@ function Billing({ shopDetails, setShopDetails }) {
     };
 
     try {
-      // Send to MongoDB!
       await fetch('https://vyaparsetu-backend.onrender.com/api/bills', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -128,7 +131,7 @@ function Billing({ shopDetails, setShopDetails }) {
     msg += `*Bill Details:*\n`;
     
     cart.forEach((item, i) => {
-      let name = item.nameHindi !== 'विवरण' ? item.nameHindi : item.nameEnglish;
+      let name = item.nameHindi || item.nameEnglish;
       msg += `${i+1}. ${name} - ${item.qty} x ₹${item.rate} = ₹${item.qty * item.rate}\n`;
     });
     
@@ -173,7 +176,6 @@ function Billing({ shopDetails, setShopDetails }) {
         @keyframes slideUpFade { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes popIn { 0% { opacity: 0; transform: scale(0.95); } 100% { opacity: 1; transform: scale(1); } }
         @keyframes glassyShine { 0% { left: -100%; } 20% { left: 200%; } 100% { left: 200%; } }
-        @keyframes textShimmer { 0% { background-position: -200% center; } 100% { background-position: 200% center; } }
 
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: transparent; }
@@ -247,7 +249,7 @@ function Billing({ shopDetails, setShopDetails }) {
             left: 0; 
             top: 0; 
             width: 100%; 
-            box-sizing: border-box; /* Fixes the overflow issue */
+            box-sizing: border-box;
             padding: 10px 20px; 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             color: #000; 
@@ -304,7 +306,7 @@ function Billing({ shopDetails, setShopDetails }) {
                 <td style={{ border: '1px solid #000', padding: '8px' }}>{item.nameHindi || item.nameEnglish}</td>
                 <td style={{ border: '1px solid #000', padding: '8px', textAlign: 'center' }}>{item.qty}</td>
                 <td style={{ border: '1px solid #000', padding: '8px', textAlign: 'center' }}>{item.rate}</td>
-                <td style={{ border: '1px solid #000', padding: '8px', textAlign: 'right' }}>{item.rate * item.qty}</td>
+                <td style={{ border: '1px solid #000', padding: '8px', textAlign: 'right' }}>{(item.rate * item.qty) || 0}</td>
               </tr>
             ))}
           </tbody>
@@ -417,6 +419,48 @@ function Billing({ shopDetails, setShopDetails }) {
               Invoice / Bill of Supply
             </div>
           </div>
+
+          {/* FIX 3: CUSTOMER & PAYMENT SECTION (MOVED TO TOP) */}
+          <div style={{ background: 'rgba(255,255,255,0.9)', padding: '20px', borderRadius: '16px', border: '1px solid #e2e8f0', marginBottom: '25px', boxShadow: '0 4px 15px rgba(0,0,0,0.02)' }}>
+            <div style={{ display: 'flex', gap: '15px', marginBottom: '20px' }}>
+              <div style={{ flex: 1 }}>
+                <input type="text" className="ui-input" placeholder="Customer Name (e.g. Rahul)" value={customerName} onChange={e => setCustomerName(e.target.value)} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <input type="text" className="ui-input" placeholder="Mobile Number (Optional)" value={customerMobile} onChange={e => setCustomerMobile(e.target.value)} />
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '15px', marginBottom: '20px' }}>
+              <button className={`payment-btn ${paymentMode === 'Cash' ? 'active' : ''}`} onClick={() => { setPaymentMode('Cash'); setAmountPaid(''); }}>💵 Cash</button>
+              <button className={`payment-btn ${paymentMode === 'UPI' ? 'active' : ''}`} onClick={() => { setPaymentMode('UPI'); setAmountPaid(''); }}>📱 UPI</button>
+              <button className={`payment-btn ${paymentMode === 'Udhaar' ? 'active' : ''}`} onClick={() => { setPaymentMode('Udhaar'); setAmountPaid(''); }}>📓 Udhaar</button>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '20px', padding: '15px', background: '#f8fafc', borderRadius: '12px', border: '1px dashed #cbd5e1' }}>
+              <div style={{ flex: 1 }}>
+                <label style={{ fontSize: '0.8rem', fontWeight: 800, color: '#64748b', display: 'block', textTransform: 'uppercase' }}>Grand Total</label>
+                <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#0f172a' }}>₹{totalAmount}</div>
+              </div>
+              <div style={{ flex: 1 }}>
+                <label style={{ fontSize: '0.8rem', fontWeight: 800, color: '#64748b', display: 'block', textTransform: 'uppercase' }}>Received (₹)</label>
+                <input 
+                  type="number" 
+                  className="ui-input" 
+                  placeholder={paymentMode === 'Udhaar' ? '0' : totalAmount.toString()} 
+                  value={amountPaid} 
+                  onChange={e => setAmountPaid(e.target.value)} 
+                  style={{ fontSize: '1.2rem', fontWeight: 800, padding: '10px 15px' }} 
+                />
+              </div>
+              <div style={{ flex: 1, textAlign: 'right' }}>
+                <label style={{ fontSize: '0.8rem', fontWeight: 800, color: '#64748b', display: 'block', textTransform: 'uppercase' }}>Udhaar</label>
+                <div style={{ fontSize: '1.8rem', fontWeight: 900, color: pendingAmount > 0 ? '#ef4444' : '#10b981' }}>
+                  ₹{pendingAmount}
+                </div>
+              </div>
+            </div>
+          </div>
           
           {/* EXACTLY ALIGNED FLEX HEADERS */}
           <div className="header-row">
@@ -429,7 +473,7 @@ function Billing({ shopDetails, setShopDetails }) {
           </div>
 
           {/* EXACTLY ALIGNED CART ITEMS */}
-          <div style={{ minHeight: '220px', maxHeight: '350px', overflowY: 'auto', marginBottom: '30px', paddingRight: '8px' }}>
+          <div style={{ minHeight: '220px', maxHeight: '350px', overflowY: 'auto', marginBottom: '20px', paddingRight: '8px' }}>
             {cart.length === 0 ? (
               <div style={{ height: '200px', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#94a3b8', fontWeight: 600, border: '2px dashed #cbd5e1', borderRadius: '20px', background: 'rgba(255,255,255,0.5)', fontSize: '1.2rem' }}>
                 Cart is empty. Tap items to add.
@@ -462,6 +506,7 @@ function Billing({ shopDetails, setShopDetails }) {
                       className="ui-input-table" 
                       value={item.qty} 
                       onChange={(e) => updateCartItem(item._id, 'qty', e.target.value)}
+                      placeholder="0"
                     />
                   </div>
                   
@@ -471,6 +516,7 @@ function Billing({ shopDetails, setShopDetails }) {
                       className="ui-input-table" 
                       value={item.rate} 
                       onChange={(e) => updateCartItem(item._id, 'rate', e.target.value)}
+                      placeholder="0"
                     />
                   </div>
                   
@@ -487,55 +533,9 @@ function Billing({ shopDetails, setShopDetails }) {
             )}
           </div>
 
-          {/* CUSTOMER & PAYMENT SECTION */}
-          <div style={{ background: 'rgba(255,255,255,0.9)', padding: '30px', borderRadius: '24px', border: '1px solid #e2e8f0', marginBottom: '30px', boxShadow: '0 10px 30px rgba(0,0,0,0.03)' }}>
-            <div style={{ display: 'flex', gap: '20px', marginBottom: '25px' }}>
-              <div style={{ flex: 1 }}>
-                <input type="text" className="ui-input" placeholder="Customer Name (e.g. Rahul)" value={customerName} onChange={e => setCustomerName(e.target.value)} />
-              </div>
-              <div style={{ flex: 1 }}>
-                <input type="text" className="ui-input" placeholder="Mobile Number (Optional)" value={customerMobile} onChange={e => setCustomerMobile(e.target.value)} />
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', gap: '20px', marginBottom: '30px' }}>
-              <button className={`payment-btn ${paymentMode === 'Cash' ? 'active' : ''}`} onClick={() => { setPaymentMode('Cash'); setAmountPaid(''); }}>💵 Cash</button>
-              <button className={`payment-btn ${paymentMode === 'UPI' ? 'active' : ''}`} onClick={() => { setPaymentMode('UPI'); setAmountPaid(''); }}>📱 UPI</button>
-              <button className={`payment-btn ${paymentMode === 'Udhaar' ? 'active' : ''}`} onClick={() => { setPaymentMode('Udhaar'); setAmountPaid(''); }}>📓 Udhaar</button>
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '25px 0', borderTop: '2px dashed #cbd5e1', borderBottom: '2px dashed #cbd5e1', marginBottom: '25px' }}>
-              <span style={{ fontSize: '1.4rem', fontWeight: 800, color: '#64748b' }}>Grand Total:</span>
-              <span style={{ fontSize: '3rem', fontWeight: 900, color: '#0f172a', letterSpacing: '-1px' }}>
-                ₹{totalAmount}
-              </span>
-            </div>
-
-            {/* AMOUNT RECEIVED IS ALWAYS VISIBLE */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '25px' }}>
-              <div style={{ flex: 1 }}>
-                <label style={{ fontSize: '0.9rem', fontWeight: 800, color: '#94a3b8', marginBottom: '10px', display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Amount Received (₹)</label>
-                <input 
-                  type="number" 
-                  className="ui-input" 
-                  placeholder={`e.g. ${paymentMode === 'Udhaar' ? '0' : totalAmount}`} 
-                  value={amountPaid} 
-                  onChange={e => setAmountPaid(e.target.value)} 
-                  style={{ fontSize: '1.3rem', fontWeight: 800, padding: '16px 20px' }} 
-                />
-              </div>
-              <div style={{ flex: 1, textAlign: 'right' }}>
-                <label style={{ fontSize: '0.9rem', fontWeight: 800, color: '#94a3b8', marginBottom: '10px', display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Udhaar Generated</label>
-                <div style={{ fontSize: '2.2rem', fontWeight: 900, color: pendingAmount > 0 ? '#ef4444' : '#10b981', transition: 'color 0.3s' }}>
-                  ₹{pendingAmount}
-                </div>
-              </div>
-            </div>
-            
-            {/* ON-SCREEN NOTES */}
-            <div style={{ textAlign: 'center', marginTop: '30px', color: '#94a3b8', fontSize: '0.95rem', fontWeight: 700 }}>
-              बेचा हुआ माल वापस नहीं होगा | Items once sold will not be returned.
-            </div>
+          {/* ON-SCREEN NOTES */}
+          <div style={{ textAlign: 'center', margin: '20px 0', color: '#94a3b8', fontSize: '0.95rem', fontWeight: 700 }}>
+            बेचा हुआ माल वापस नहीं होगा | Items once sold will not be returned.
           </div>
 
           {/* ACTION BUTTONS */}
