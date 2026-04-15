@@ -123,23 +123,23 @@ const handleDeleteProduct = async (id) => {
       return;
     }
 
+    // 1. Instantly update the screen so it feels lightning fast
     const updatedList = products.map(p => p._id === editingProduct._id ? editingProduct : p);
     setProducts(updatedList);
     
     const productToSave = { ...editingProduct }; 
     setEditingProduct(null); 
 
-    if (shopDetails?.id === 'roopchand') {
-      try {
-        const response = await fetch(`https://vyaparsetu-backend.onrender.com/api/products/${productToSave._id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(productToSave)
-        });
-        if (!response.ok) alert("Warning: Could not save edit to the database. It may reset on refresh.");
-      } catch (err) { console.error("Failed to save edit to DB:", err); }
-    } else {
-      localStorage.setItem(`inventory_${shopDetails.id}`, JSON.stringify(updatedList));
+    // 2. ALWAYS save to the live cloud database, no matter who the user is!
+    try {
+      const response = await fetch(`https://vyaparsetu-backend.onrender.com/api/products/${productToSave._id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(productToSave)
+      });
+      if (!response.ok) alert("Warning: Could not save edit to the database. It may reset on refresh.");
+    } catch (err) { 
+      console.error("Failed to save edit to DB:", err); 
     }
   };
 
