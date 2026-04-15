@@ -15,6 +15,23 @@ function Billing({ shopDetails, setShopDetails }) {
   const [showStock, setShowStock] = useState(false);
   const [paymentMode, setPaymentMode] = useState('Cash'); 
 
+  // VIP Address Logic: ONLY riturajgrover gets the address automatically. Everyone else gets a blank prompt.
+  const defaultAddress = (shopDetails?.id === 'riturajgrover') 
+    ? 'General Merchant, Gali Sher Gali, MANASA (M.P.)' 
+    : 'Tap here to add your shop address ✏️';
+
+  const shopAddress = shopDetails?.address || localStorage.getItem(`address_${shopDetails?.id}`) || defaultAddress;
+
+  const handleAddressClick = () => {
+    const newAddress = window.prompt("Enter your shop address (e.g., City, State):", shopAddress.includes('Tap here') ? '' : shopAddress);
+    if (newAddress !== null && newAddress.trim() !== "") {
+      if (shopDetails) {
+          setShopDetails({...shopDetails, address: newAddress.trim()});
+      }
+      localStorage.setItem(`address_${shopDetails?.id}`, newAddress.trim());
+    }
+  };
+
   useEffect(() => {
     // ALWAYS fetch from the live cloud database!
     if (shopDetails) {
@@ -125,7 +142,7 @@ function Billing({ shopDetails, setShopDetails }) {
     }
 
     let msg = `*${shopDetails?.name || 'ROOPCHAND SANDEEP KUMAR'}*\n`;
-    msg += `_General Merchant, Gali Sher Gali, MANASA (M.P.)_\n\n`;
+    msg += `_${shopAddress.replace(' ✏️', '')}_\n\n`;
     msg += `Date: ${new Date().toLocaleDateString('en-GB')}\n`;
     msg += `Customer: ${customerName || 'Cash'}\n\n`;
     msg += `*Bill Details:*\n`;
@@ -273,7 +290,7 @@ function Billing({ shopDetails, setShopDetails }) {
           <h1 style={{ margin: '0', fontSize: '28px', textTransform: 'uppercase', fontStyle: 'italic', fontWeight: '900', letterSpacing: '1px', borderBottom: '3px solid #000', display: 'inline-block', paddingBottom: '4px', paddingLeft: '15px', paddingRight: '15px' }}>
             {shopDetails?.name || 'ROOPCHAND SANDEEP KUMAR'}
           </h1>
-          <p style={{ margin: '8px 0 0 0', fontSize: '13px', fontWeight: 'bold' }}>General Merchant, Gali Sher Gali, MANASA (M.P.)</p>
+          <p style={{ margin: '8px 0 0 0', fontSize: '13px', fontWeight: 'bold' }}>{shopAddress.replace(' ✏️', '')}</p>
         </div>
         
         {/* CUSTOMER & DATE INFO */}
@@ -414,13 +431,20 @@ function Billing({ shopDetails, setShopDetails }) {
             <h2 style={{ margin: '0 0 8px 0', fontSize: '2rem', fontWeight: 900, textTransform: 'uppercase', color: '#0f172a', letterSpacing: '0.5px' }}>
               {shopDetails?.name || 'ROOPCHAND SANDEEP KUMAR'}
             </h2>
-            <p style={{ margin: '0 0 15px 0', color: '#64748b', fontSize: '1rem', fontWeight: 600 }}>General Merchant, Gali Sher Gali, MANASA (M.P.)</p>
+            {/* CLICKABLE DYNAMIC ADDRESS */}
+            <p 
+              onClick={handleAddressClick}
+              style={{ margin: '0 0 15px 0', color: '#64748b', fontSize: '1rem', fontWeight: 600, cursor: 'pointer', transition: 'color 0.2s' }}
+              onMouseOver={(e) => e.target.style.color = '#2155FF'}
+              onMouseOut={(e) => e.target.style.color = '#64748b'}
+            >
+              {shopAddress}
+            </p>
             <div style={{ display: 'inline-block', background: '#fff', border: '1px solid #e2e8f0', padding: '8px 20px', borderRadius: '24px', color: '#475569', fontSize: '0.9rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1.5px', boxShadow: '0 4px 6px rgba(0,0,0,0.02)' }}>
               Invoice / Bill of Supply
             </div>
           </div>
 
-          {/* FIX 3: CUSTOMER & PAYMENT SECTION (MOVED TO TOP) */}
           <div style={{ background: 'rgba(255,255,255,0.9)', padding: '20px', borderRadius: '16px', border: '1px solid #e2e8f0', marginBottom: '25px', boxShadow: '0 4px 15px rgba(0,0,0,0.02)' }}>
             <div style={{ display: 'flex', gap: '15px', marginBottom: '20px' }}>
               <div style={{ flex: 1 }}>
@@ -431,34 +455,10 @@ function Billing({ shopDetails, setShopDetails }) {
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '15px', marginBottom: '20px' }}>
+            <div style={{ display: 'flex', gap: '15px' }}>
               <button className={`payment-btn ${paymentMode === 'Cash' ? 'active' : ''}`} onClick={() => { setPaymentMode('Cash'); setAmountPaid(''); }}>💵 Cash</button>
               <button className={`payment-btn ${paymentMode === 'UPI' ? 'active' : ''}`} onClick={() => { setPaymentMode('UPI'); setAmountPaid(''); }}>📱 UPI</button>
               <button className={`payment-btn ${paymentMode === 'Udhaar' ? 'active' : ''}`} onClick={() => { setPaymentMode('Udhaar'); setAmountPaid(''); }}>📓 Udhaar</button>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '20px', padding: '15px', background: '#f8fafc', borderRadius: '12px', border: '1px dashed #cbd5e1' }}>
-              <div style={{ flex: 1 }}>
-                <label style={{ fontSize: '0.8rem', fontWeight: 800, color: '#64748b', display: 'block', textTransform: 'uppercase' }}>Grand Total</label>
-                <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#0f172a' }}>₹{totalAmount}</div>
-              </div>
-              <div style={{ flex: 1 }}>
-                <label style={{ fontSize: '0.8rem', fontWeight: 800, color: '#64748b', display: 'block', textTransform: 'uppercase' }}>Received (₹)</label>
-                <input 
-                  type="number" 
-                  className="ui-input" 
-                  placeholder={paymentMode === 'Udhaar' ? '0' : totalAmount.toString()} 
-                  value={amountPaid} 
-                  onChange={e => setAmountPaid(e.target.value)} 
-                  style={{ fontSize: '1.2rem', fontWeight: 800, padding: '10px 15px' }} 
-                />
-              </div>
-              <div style={{ flex: 1, textAlign: 'right' }}>
-                <label style={{ fontSize: '0.8rem', fontWeight: 800, color: '#64748b', display: 'block', textTransform: 'uppercase' }}>Udhaar</label>
-                <div style={{ fontSize: '1.8rem', fontWeight: 900, color: pendingAmount > 0 ? '#ef4444' : '#10b981' }}>
-                  ₹{pendingAmount}
-                </div>
-              </div>
             </div>
           </div>
           
@@ -531,6 +531,31 @@ function Billing({ shopDetails, setShopDetails }) {
                 </div>
               ))
             )}
+          </div>
+
+          {/* TOTALS BOX - MOVED TO THE BOTTOM! */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '20px', padding: '15px', background: '#f8fafc', borderRadius: '12px', border: '1px dashed #cbd5e1', marginBottom: '20px' }}>
+            <div style={{ flex: 1 }}>
+              <label style={{ fontSize: '0.8rem', fontWeight: 800, color: '#64748b', display: 'block', textTransform: 'uppercase' }}>Grand Total</label>
+              <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#0f172a' }}>₹{totalAmount}</div>
+            </div>
+            <div style={{ flex: 1 }}>
+              <label style={{ fontSize: '0.8rem', fontWeight: 800, color: '#64748b', display: 'block', textTransform: 'uppercase' }}>Received (₹)</label>
+              <input 
+                type="number" 
+                className="ui-input" 
+                placeholder={`e.g. ${paymentMode === 'Udhaar' ? '0' : totalAmount}`} 
+                value={amountPaid} 
+                onChange={e => setAmountPaid(e.target.value)} 
+                style={{ fontSize: '1.2rem', fontWeight: 800, padding: '10px 15px' }} 
+              />
+            </div>
+            <div style={{ flex: 1, textAlign: 'right' }}>
+              <label style={{ fontSize: '0.8rem', fontWeight: 800, color: '#64748b', display: 'block', textTransform: 'uppercase' }}>Udhaar Generated</label>
+              <div style={{ fontSize: '2.2rem', fontWeight: 900, color: pendingAmount > 0 ? '#ef4444' : '#10b981', transition: 'color 0.3s' }}>
+                ₹{pendingAmount}
+              </div>
+            </div>
           </div>
 
           {/* ON-SCREEN NOTES */}
