@@ -57,11 +57,12 @@ function Billing({ shopDetails, setShopDetails }) {
   };
 
   // FIX 1: Blank default values so no backspacing is needed!
+  // FIX: Allow the same item to be added multiple times as separate rows
   const addToCart = (product) => {
-    const existing = cart.find(item => item._id === product._id);
-    if (!existing) {
-      setCart([...cart, { ...product, qty: '', rate: product.rate || '' }]);
-    }
+    // Slap a unique timestamp on the ID so React treats every click as a new, independent row
+    const uniqueRowId = product._id + '_' + Date.now();
+    
+    setCart([...cart, { ...product, _id: uniqueRowId, qty: '', rate: product.rate || '' }]);
   };
 
   const addCustomItem = () => {
@@ -176,7 +177,23 @@ function Billing({ shopDetails, setShopDetails }) {
     (p.nameHindi && p.nameHindi.toLowerCase().includes(searchQuery.toLowerCase())) || 
     (p.nameEnglish && p.nameEnglish.toLowerCase().includes(searchQuery.toLowerCase())) ||
     (p.productId && p.productId.toString().includes(searchQuery.toLowerCase()))
-  );
+  ).sort((a, b) => {
+    const query = searchQuery.trim().toLowerCase();
+    
+    // 1. EXACT Code Match gets pushed to the absolute top
+    const aExactCode = a.productId && a.productId.toString().toLowerCase() === query;
+    const bExactCode = b.productId && b.productId.toString().toLowerCase() === query;
+    if (aExactCode && !bExactCode) return -1;
+    if (!aExactCode && bExactCode) return 1;
+
+    // 2. EXACT Name Match goes right below the exact code
+    const aExactName = (a.nameHindi && a.nameHindi.toLowerCase() === query) || (a.nameEnglish && a.nameEnglish.toLowerCase() === query);
+    const bExactName = (b.nameHindi && b.nameHindi.toLowerCase() === query) || (b.nameEnglish && b.nameEnglish.toLowerCase() === query);
+    if (aExactName && !bExactName) return -1;
+    if (!aExactName && bExactName) return 1;
+
+    return 0; // Keep everything else in normal order
+  });
 
   return (
     <div style={{ minHeight: '100vh', color: '#1e293b', fontFamily: '"Outfit", sans-serif', paddingBottom: '40px', overflowX: 'hidden', position: 'relative' }}>
