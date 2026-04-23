@@ -269,27 +269,33 @@ function Billing({ shopDetails, setShopDetails }) {
         .nav-btn { cursor: pointer; font-weight: 700; padding: 12px 22px; border-radius: 12px; border: 1px solid #e2e8f0; background: rgba(255,255,255,0.8); transition: all 0.2s; display: flex; align-items: center; gap: 8px; font-family: inherit; font-size: 0.95rem; color: #1e293b; backdrop-filter: blur(10px); }
         .nav-btn:hover { background: #fff; transform: translateY(-2px); box-shadow: 0 8px 15px rgba(0,0,0,0.05); }
 
-        /* --- PERFECTED PRINT STYLES FOR A4 --- */
+/* --- PERFECTED PRINT STYLES FOR A4 (MULTI-PAGE FIX) --- */
         .print-only { display: none; }
         @media print {
           @page { margin: 10mm; }
-          body { background: #fff; }
-          body * { visibility: hidden; }
-          .animated-bg { display: none !important; }
-          .print-only, .print-only * { visibility: visible; }
+          body, html { background: #fff; height: auto !important; overflow: visible !important; }
+          
+          /* Unlock the parent wrapper so it doesn't clip Page 2 */
+          body > div { height: auto !important; min-height: 0 !important; overflow: visible !important; }
+          
+          /* Hide the web UI elements entirely */
+          .animated-bg, .no-print { display: none !important; }
+          
+          /* CRITICAL: Restore normal document flow so it breaks pages naturally */
           .print-only { 
-            display: block; 
-            position: absolute; 
-            left: 0; 
-            top: 0; 
+            display: block !important; 
+            position: static !important; 
             width: 100%; 
-            box-sizing: border-box;
-            padding: 10px 20px; 
+            padding: 0; 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             color: #000; 
             font-size: 13px;
           }
-          .no-print { display: none !important; }
+          
+          /* Keep table headers on every page and prevent rows from splitting in half */
+          table { page-break-inside: auto; }
+          tr { page-break-inside: avoid; page-break-after: auto; }
+          thead { display: table-header-group; }
         }
       `}</style>
 
