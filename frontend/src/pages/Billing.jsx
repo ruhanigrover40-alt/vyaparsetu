@@ -269,24 +269,32 @@ function Billing({ shopDetails, setShopDetails }) {
         .nav-btn { cursor: pointer; font-weight: 700; padding: 12px 22px; border-radius: 12px; border: 1px solid #e2e8f0; background: rgba(255,255,255,0.8); transition: all 0.2s; display: flex; align-items: center; gap: 8px; font-family: inherit; font-size: 0.95rem; color: #1e293b; backdrop-filter: blur(10px); }
         .nav-btn:hover { background: #fff; transform: translateY(-2px); box-shadow: 0 8px 15px rgba(0,0,0,0.05); }
 
-/* --- PERFECTED PRINT STYLES FOR A4 (MULTI-PAGE FIX) --- */
+/* --- PERFECTED PRINT STYLES FOR A4 (GHOST PAGE FIX) --- */
         .print-only { display: none; }
         @media print {
           @page { margin: 10mm; }
-          body, html { background: #fff; height: auto !important; overflow: visible !important; }
+          body, html { 
+            background: #fff; 
+            height: auto !important; 
+            min-height: 0 !important; 
+            margin: 0 !important; 
+            padding: 0 !important; 
+            overflow: visible !important; 
+          }
           
-          /* Unlock the parent wrapper so it doesn't clip Page 2 */
-          body > div { height: auto !important; min-height: 0 !important; overflow: visible !important; }
+          /* CRITICAL: Force every single container to drop its laptop screen height! */
+          * { min-height: 0 !important; }
           
           /* Hide the web UI elements entirely */
           .animated-bg, .no-print { display: none !important; }
           
-          /* CRITICAL: Restore normal document flow so it breaks pages naturally */
+          /* Restore normal document flow */
           .print-only { 
             display: block !important; 
             position: static !important; 
             width: 100%; 
             padding: 0; 
+            margin: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             color: #000; 
             font-size: 13px;
