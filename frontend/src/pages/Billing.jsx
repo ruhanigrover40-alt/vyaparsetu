@@ -133,67 +133,74 @@ function Billing({ shopDetails, setShopDetails }) {
     }
   };
 
-  const handlePrint = async () => {
-    // --- SAAS PLAN LIMIT CHECK ---
-  const userPlan = shopDetails?.plan || 'neev';
-  const allowedBills = PLAN_LIMITS[userPlan].maxBills;
+const handlePrint = async () => {
+  // 1. SAFETY GATE
+  if (shopDetails && bills) {
+    const userPlan = shopDetails?.plan || 'neev';
+    const allowedBills = PLAN_LIMITS[userPlan]?.maxBills || 10;
 
-  // Change 'bills.length' to whatever state variable holds your total bills!
-  if (bills.length >= allowedBills) {
-    alert(`Neev plan only allows ${allowedBills} bills per month. Please upgrade to Pragati!`);
-    setShowRazorpayPopup(true); 
-    return; // THIS IS CRITICAL: It stops the bill from saving/printing
+    if (bills.length >= allowedBills) {
+      alert(`Neev plan only allows ${allowedBills} bills per month. Please upgrade to Pragati!`);
+      setShowRazorpayPopup(true); 
+      return; 
+    }
   }
-  // -----------------------------
-    const saved = await saveBillToLedger();
-    if (!saved) return alert("Cart is empty!");
-    window.print();
-    resetForm();
-  };
 
-  const handleWhatsApp = async () => {
-    // --- SAAS PLAN LIMIT CHECK ---
-  const userPlan = shopDetails?.plan || 'neev';
-  const allowedBills = PLAN_LIMITS[userPlan].maxBills;
+  // 2. EXECUTION
+  const saved = await saveBillToLedger();
+  if (!saved) return alert("Cart is empty!");
+  
+  window.print();
+  resetForm();
+};
 
-  // Change 'bills.length' to whatever state variable holds your total bills!
-  if (bills.length >= allowedBills) {
-    alert(`Neev plan only allows ${allowedBills} bills per month. Please upgrade to Pragati!`);
-    setShowRazorpayPopup(true); 
-    return; // THIS IS CRITICAL: It stops the bill from saving/printing
-  }
-  // -----------------------------
-    const saved = await saveBillToLedger();
-    if (!saved) return alert("Cart is empty!");
-    
-    const cleanMobile = customerMobile.replace(/\D/g, '');
-    if (!cleanMobile || cleanMobile.length < 10) {
-      alert("Please enter a valid 10-digit mobile number to send WhatsApp!");
+const handleWhatsApp = async () => {
+  // 1. SAFETY GATE
+  if (shopDetails && bills) {
+    const userPlan = shopDetails?.plan || 'neev';
+    const allowedBills = PLAN_LIMITS[userPlan]?.maxBills || 10;
+
+    if (bills.length >= allowedBills) {
+      alert(`Limit reached. Please upgrade!`);
+      setShowRazorpayPopup(true); 
       return;
     }
+  }
 
-    let msg = `*${shopDetails?.name || 'ROOPCHAND SANDEEP KUMAR'}*\n`;
-    msg += `_${shopAddress.replace(' ✏️', '')}_\n\n`;
-    msg += `Date: ${new Date().toLocaleDateString('en-GB')}\n`;
-    msg += `Customer: ${customerName || 'Cash'}\n\n`;
-    msg += `*Bill Details:*\n`;
-    
-    cart.forEach((item, i) => {
-      let name = item.nameHindi || item.nameEnglish;
-      msg += `${i+1}. ${name} - ${item.qty} x ₹${item.rate} = ₹${item.qty * item.rate}\n`;
-    });
-    
-    msg += `\n*Grand Total: ₹${totalAmount}*\n`;
-    msg += `Paid: ₹${paid} (${paymentMode})\n`;
-    if (pendingAmount > 0) msg += `*Pending Udhaar: ₹${pendingAmount}*\n`;
-    msg += `\n_बेचा हुआ माल वापस नहीं होगा_`;
-    msg += `\n_Items once sold will not be returned._\n`;
-    msg += `\nThank you for visiting!\nPowered by VyaparSetu`;
+  // 2. SAVE FIRST
+  const saved = await saveBillToLedger();
+  if (!saved) return alert("Cart is empty!");
 
-    const encodedMsg = encodeURIComponent(msg);
-    window.open(`https://wa.me/91${cleanMobile}?text=${encodedMsg}`, '_blank');
-    resetForm();
-  };
+  // 3. WHATSAPP LOGIC
+  const cleanMobile = customerMobile.replace(/\D/g, ''); 
+  if (cleanMobile.length < 10) {
+    return alert("Please enter a valid 10-digit mobile number!");
+  }
+
+  // Building the detailed message
+  let msg = `*${shopDetails?.name || 'ROOPCHAND SANDEEP KUMAR'}*\n`;
+  msg += `_${shopAddress.replace(' ✏️', '')}_\n\n`;
+  msg += `Date: ${new Date().toLocaleDateString('en-GB')}\n`;
+  msg += `Customer: ${customerName || 'Cash'}\n\n`;
+  msg += `*Bill Details:*\n`;
+  
+  cart.forEach((item, i) => {
+    let name = item.nameHindi || item.nameEnglish;
+    msg += `${i+1}. ${name} - ${item.qty} x ₹${item.rate} = ₹${item.qty * item.rate}\n`;
+  });
+  
+  msg += `\n*Grand Total: ₹${totalAmount}*\n`;
+  msg += `Paid: ₹${paid} (${paymentMode})\n`;
+  if (pendingAmount > 0) msg += `*Pending Udhaar: ₹${pendingAmount}*\n`;
+  msg += `\n_बेचा हुआ माल वापस नहीं होगा_`;
+  msg += `\n_Items once sold will not be returned._\n`;
+  msg += `\nThank you for visiting!\nPowered by VyaparSetu`;
+
+  // 4. EXECUTION
+  const encodedMsg = encodeURIComponent(msg);
+  window.open(`https://wa.me/91${cleanMobile}?text=${encodedMsg}`, '_blank');
+  resetForm();
+};
 
   const resetForm = () => {
     setCart([]);
