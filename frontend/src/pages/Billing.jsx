@@ -1,6 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+ // Add this near the top of your file, outside your main component
+const PLAN_LIMITS = {
+  neev: { maxBills: 10, maxItems: 10 },
+  pragati: { maxBills: 500, maxItems: Infinity }, // Infinity means unlimited
+  udaan: { maxBills: Infinity, maxItems: Infinity }
+};
+
 function Billing({ shopDetails, setShopDetails }) {
   const navigate = useNavigate();
   
@@ -14,7 +21,8 @@ function Billing({ shopDetails, setShopDetails }) {
   
   const [showStock, setShowStock] = useState(false);
   const [paymentMode, setPaymentMode] = useState('Cash'); 
-
+  const [showRazorpayPopup, setShowRazorpayPopup] = useState(false);
+  
   // VIP Address Logic: ONLY riturajgrover gets the address automatically. Everyone else gets a blank prompt.
   const defaultAddress = (shopDetails?.id === 'riturajgrover') 
     ? 'General Merchant, Gali Sher Gali, MANASA (M.P.)' 
@@ -126,6 +134,17 @@ function Billing({ shopDetails, setShopDetails }) {
   };
 
   const handlePrint = async () => {
+    // --- SAAS PLAN LIMIT CHECK ---
+  const userPlan = shopDetails?.plan || 'neev';
+  const allowedBills = PLAN_LIMITS[userPlan].maxBills;
+
+  // Change 'bills.length' to whatever state variable holds your total bills!
+  if (bills.length >= allowedBills) {
+    alert(`Neev plan only allows ${allowedBills} bills per month. Please upgrade to Pragati!`);
+    setShowRazorpayPopup(true); 
+    return; // THIS IS CRITICAL: It stops the bill from saving/printing
+  }
+  // -----------------------------
     const saved = await saveBillToLedger();
     if (!saved) return alert("Cart is empty!");
     window.print();
@@ -133,6 +152,17 @@ function Billing({ shopDetails, setShopDetails }) {
   };
 
   const handleWhatsApp = async () => {
+    // --- SAAS PLAN LIMIT CHECK ---
+  const userPlan = shopDetails?.plan || 'neev';
+  const allowedBills = PLAN_LIMITS[userPlan].maxBills;
+
+  // Change 'bills.length' to whatever state variable holds your total bills!
+  if (bills.length >= allowedBills) {
+    alert(`Neev plan only allows ${allowedBills} bills per month. Please upgrade to Pragati!`);
+    setShowRazorpayPopup(true); 
+    return; // THIS IS CRITICAL: It stops the bill from saving/printing
+  }
+  // -----------------------------
     const saved = await saveBillToLedger();
     if (!saved) return alert("Cart is empty!");
     

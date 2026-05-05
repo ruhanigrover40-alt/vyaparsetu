@@ -2,6 +2,13 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as XLSX from 'xlsx'; 
 
+// Add this near the top of your file, outside your main component
+const PLAN_LIMITS = {
+  neev: { maxBills: 10, maxItems: 10 },
+  pragati: { maxBills: 500, maxItems: Infinity }, // Infinity means unlimited
+  udaan: { maxBills: Infinity, maxItems: Infinity }
+};
+
 function Inventory({ shopDetails, setShopDetails }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
