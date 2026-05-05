@@ -10,7 +10,7 @@ const PLAN_LIMITS = {
 
 function Billing({ shopDetails, setShopDetails }) {
   const navigate = useNavigate();
-  
+  const [bills, setBills] = useState([]);
   const [products, setProducts] = useState([]);
   const [cart, setCart] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -135,7 +135,7 @@ function Billing({ shopDetails, setShopDetails }) {
 
 const handlePrint = async () => {
   // 1. SAFETY GATE
-  if (shopDetails && bills) {
+  if (shopDetails && (bills || bills === [])) {
     const userPlan = shopDetails?.plan || 'neev';
     const allowedBills = PLAN_LIMITS[userPlan]?.maxBills || 10;
 
@@ -156,7 +156,7 @@ const handlePrint = async () => {
 
 const handleWhatsApp = async () => {
   // 1. SAFETY GATE
-  if (shopDetails && bills) {
+  if (shopDetails && (bills || bills === [])) {
     const userPlan = shopDetails?.plan || 'neev';
     const allowedBills = PLAN_LIMITS[userPlan]?.maxBills || 10;
 
